@@ -3,8 +3,10 @@ package com.exchange_simulator.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +18,7 @@ import java.util.Objects;
 public class User extends Base{
     @Getter
     @OneToMany(mappedBy = "user", cascade = CascadeType.DETACH)
-    private final List<Position> positions = new ArrayList<>();
+    private final List<SpotPosition> positions = new ArrayList<>();
 
     @Getter
     @Column(nullable = false)
@@ -30,6 +32,11 @@ public class User extends Base{
     @Setter
     @Column(nullable = false)
     private BigDecimal funds = BigDecimal.valueOf(1000.0);
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    @Getter
+    private Instant updatedAt;
 
     public User() {}
 

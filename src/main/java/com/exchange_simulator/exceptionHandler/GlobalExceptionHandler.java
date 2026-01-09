@@ -37,8 +37,8 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(PositionNotFoundException.class)
-    public ResponseEntity<ErrorResponseDto> handlePositionNotFound(ExchangeException ex, HttpServletRequest request) {
+    @ExceptionHandler(SpotPositionNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleSpotPositionNotFound(ExchangeException ex, HttpServletRequest request) {
         return new ResponseEntity<>(
                 buildResponse(HttpStatus.BAD_REQUEST, ex, request),
                 HttpStatus.BAD_REQUEST
@@ -46,6 +46,13 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(NotEnoughResourcesException.class)
     public ResponseEntity<ErrorResponseDto> handleNotEnoughResources(ExchangeException ex, HttpServletRequest request) {
+        return new ResponseEntity<>(
+                buildResponse(HttpStatus.BAD_REQUEST, ex, request),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+    @ExceptionHandler(BadQuantityException.class)
+    public ResponseEntity<ErrorResponseDto> handleBadQuantity(ExchangeException ex, HttpServletRequest request) {
         return new ResponseEntity<>(
                 buildResponse(HttpStatus.BAD_REQUEST, ex, request),
                 HttpStatus.BAD_REQUEST

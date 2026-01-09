@@ -2,19 +2,23 @@ package com.exchange_simulator.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.jpa.repository.Query;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name="positions")
-public class Position extends Base{
-    public Position() {}
+@Table(name="spotPosition")
+public class SpotPosition extends Base{
+    public SpotPosition() {}
 
-    public Position(String token, BigDecimal quantity, BigDecimal buyPrice, User user){
+    public SpotPosition(String token, BigDecimal quantity, BigDecimal avgBuyPrice, User user, Instant lastBuyOrder) {
         this.token = token;
         this.quantity = quantity;
-        this.buyPrice = buyPrice;
+        this.avgBuyPrice = avgBuyPrice;
+        this.positionValue = BigDecimal.ZERO;
+        this.timestamp = lastBuyOrder;
         this.user = user;
     }
 
@@ -28,15 +32,23 @@ public class Position extends Base{
     private String token;
 
     @Getter
+    @Setter
     @Column(nullable = false)
     private BigDecimal quantity;
 
     @Getter
     @Column(nullable = false)
-    private BigDecimal buyPrice;
+    private BigDecimal avgBuyPrice;
 
     @Getter
-    private Instant closedAt;
+    @Setter
+    @Column(nullable = false)
+    private BigDecimal positionValue;
+
+    @Getter
+    @Setter
+    @Column(nullable = false)
+    private Instant timestamp;
 
     @Override
     public String toString() {

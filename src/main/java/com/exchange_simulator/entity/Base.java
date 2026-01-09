@@ -15,11 +15,6 @@ public abstract class Base {
     @Getter
     protected Long id;
 
-    @UpdateTimestamp
-    @Column(nullable = false)
-    @Getter
-    protected Instant updatedAt;
-
     @CreationTimestamp
     @Column(nullable = false)
     @Getter
