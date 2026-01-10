@@ -2,7 +2,9 @@ package com.exchange_simulator.controller;
 
 import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.order.OrderResponseDto;
+import com.exchange_simulator.service.LimitOrderService;
 import com.exchange_simulator.service.MarketOrderService;
+import com.exchange_simulator.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,41 +14,41 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users-orders")
 @RequiredArgsConstructor
-public class MarketOrderController {
-    private final MarketOrderService marketOrderService;
+public class LimitOrderController {
+    private final LimitOrderService limitOrderService;
 
-    @GetMapping("/{userId}/market")
+    @GetMapping("/{userId}/limit")
     public ResponseEntity<List<OrderResponseDto>> getUserOrders(@PathVariable Long userId)
     {
-        return ResponseEntity.ok(marketOrderService.getUserMarketOrders(userId));
+        return ResponseEntity.ok(limitOrderService.getUserLimitOrders(userId));
     }
-    @GetMapping("/{userId}/market/buy")
+    @GetMapping("/{userId}/limit/buy")
     public ResponseEntity<List<OrderResponseDto>> getUserBuyOrders(@PathVariable Long userId)
     {
-        return ResponseEntity.ok(marketOrderService.getUserBuyMarketOrders(userId));
+        return ResponseEntity.ok(limitOrderService.getUserBuyLimitOrders(userId));
     }
-    @GetMapping("/{userId}/market/sell")
+    @GetMapping("/{userId}/limit/sell")
     public ResponseEntity<List<OrderResponseDto>> getUserSellOrders(@PathVariable Long userId)
     {
-        return ResponseEntity.ok(marketOrderService.getUserSellMarketOrders(userId));
+        return ResponseEntity.ok(limitOrderService.getUserSellLimitOrders(userId));
     }
-    @PostMapping("/{userId}/market/buy")
+    @PostMapping("/{userId}/limit/buy")
     public ResponseEntity<OrderResponseDto> buy(
             @PathVariable Long userId,
             @RequestBody OrderRequestDto orderRequestDto
     ){
         orderRequestDto.setUserId(userId);
-        var order = marketOrderService.buy(orderRequestDto);
-        return ResponseEntity.ok(marketOrderService.getDto(order));
+        var order = limitOrderService.buy(orderRequestDto);
+        return ResponseEntity.ok(limitOrderService.getDto(order));
     }
 
-    @PostMapping("/{userId}/market/sell")
+    @PostMapping("/{userId}/limit/sell")
     public ResponseEntity<OrderResponseDto> sell(
             @PathVariable Long userId,
             @RequestBody OrderRequestDto orderRequestDto
     ){
         orderRequestDto.setUserId(userId);
-        var order = marketOrderService.sell(orderRequestDto);
-        return ResponseEntity.ok(marketOrderService.getDto(order));
+        var order = limitOrderService.sell(orderRequestDto);
+        return ResponseEntity.ok(limitOrderService.getDto(order));
     }
 }

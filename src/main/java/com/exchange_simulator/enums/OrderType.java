@@ -1,3 +1,3 @@
 package com.exchange_simulator.enums;
 
-public enum OrderType { BUY, SELL }
+public enum OrderType {LIMIT, MARKET}

@@ -14,6 +14,7 @@ public record SpotPositionResponseDto(
         String token,
         BigDecimal quantity,
         BigDecimal avgBuyPrice,
+        BigDecimal positionValue,
         Instant timestamp
 ) implements Serializable
 {}

@@ -24,12 +24,13 @@ public interface SpotPositionRepository extends JpaRepository<SpotPosition, Long
     @Transactional
     @Modifying
     @Query("update SpotPosition p set p.avgBuyPrice = (" +
-            "select sum(o.tokenPrice * o.quantity) / sum(o.quantity) from MarketOrder o " +
-            "WHERE o.user.id = :userId " +
-            "AND o.token = :token " +
-            "AND o.orderType = 'BUY' " +
-            "AND o.createdAt >= p.timestamp) " +
-            "WHERE p.user.id = :userId AND p.id = :posId")
+            "select sum(o.tokenPrice * o.quantity) / sum(o.quantity) from Order o " +
+            "where o.user.id = :userId " +
+            "and o.token = :token " +
+            "and o.transactionType = 'BUY' " +
+            "and o.closedAt != null " +
+            "and o.createdAt >= p.timestamp) " +
+            "where p.user.id = :userId and p.id = :posId")
     void updateAvgBuyPriceByUserAndPositionId (Long userId, Long posId, String token);
 
 }

@@ -1,14 +1,12 @@
 package com.exchange_simulator.service;
 
-import com.exchange_simulator.dto.marketOrder.MarketOrderRequestDto;
+import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.entity.SpotPosition;
 import com.exchange_simulator.entity.User;
-import com.exchange_simulator.exceptionHandler.exceptions.BadQuantityException;
 import com.exchange_simulator.exceptionHandler.exceptions.NotEnoughResourcesException;
 import com.exchange_simulator.exceptionHandler.exceptions.SpotPositionNotFoundException;
-import com.exchange_simulator.exceptionHandler.exceptions.UserNotFoundException;
-import com.exchange_simulator.repository.MarketOrderRepository;
+import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
 import com.exchange_simulator.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,20 +21,20 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class SpotPositionService {
     private final SpotPositionRepository spotPositionRepository;
-    private final MarketOrderRepository marketOrderRepository;
+    private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final CryptoDataService cryptoDataService;
 
-    public void handleBuy(User user, MarketOrderRequestDto dto, BigDecimal tokenPrice) {
+    public void handleBuy(User user, OrderRequestDto dto, BigDecimal tokenPrice) {
+
         var position = handlePosition(dto.getToken(), dto.getQuantity(), tokenPrice, user);
 
-        position.setPositionValue(position.getQuantity().multiply(tokenPrice));
         spotPositionRepository.save(position);
 
         spotPositionRepository.updateAvgBuyPriceByUserAndPositionId(user.getId(), position.getId(), dto.getToken());
     }
 
-    public void handleSell(User user, MarketOrderRequestDto dto, BigDecimal tokenPrice) {
+    public void handleSell(User user, OrderRequestDto dto, BigDecimal tokenPrice) {
         var position = findPositionByToken(user, dto.getToken());
         if(position.isEmpty())
             throw new SpotPositionNotFoundException(user,  dto.getToken());
@@ -50,7 +48,6 @@ public class SpotPositionService {
         if (ownedTokens.compareTo(BigDecimal.ZERO) == 0) {
             spotPositionRepository.delete(position.get());
         } else {
-            position.get().setPositionValue(ownedTokens.multiply(tokenPrice));
             spotPositionRepository.save(position.get());
         }
     }
@@ -58,16 +55,18 @@ public class SpotPositionService {
     public List<SpotPositionResponseDto> getPortfolio(Long userId) {
         return spotPositionRepository.findAllByUserId(userId)
                 .stream()
-                .map(SpotPositionService::getDto)
+                .map(this::getDto)
                 .toList();
     }
 
-    public static SpotPositionResponseDto getDto(SpotPosition position){
+    public SpotPositionResponseDto getDto(SpotPosition position){
+        var tokenPrice = cryptoDataService.getPrice(position.getToken());
         return new SpotPositionResponseDto(
                 position.getId(),
                 position.getToken(),
                 position.getQuantity(),
                 position.getAvgBuyPrice(),
+                tokenPrice.multiply(position.getQuantity()),
                 position.getTimestamp()
         );
     }
@@ -82,7 +81,7 @@ public class SpotPositionService {
         position.ifPresent(pos ->
                     pos.setQuantity(pos.getQuantity().add(quantity))
         );
-        Instant lastBuyOrder = marketOrderRepository.getNewestOrderTimestamp(user.getId(), token);
+        Instant lastBuyOrder = orderRepository.getNewestOrderTimestamp(user.getId(), token);
         return position.orElseGet(() ->
                 spotPositionRepository.save(new SpotPosition(token, quantity, tokenPrice, user, lastBuyOrder))
         );

@@ -1,19 +1,22 @@
-package com.exchange_simulator.dto.marketOrder;
+package com.exchange_simulator.dto.order;
 
 
 import com.exchange_simulator.enums.OrderType;
+import com.exchange_simulator.enums.TransactionType;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-public record MarketOrderResponseDto(
+public record OrderResponseDto(
         Long userId,
         Long orderId,
         Instant createdAt,
         String token,
         BigDecimal quantity,
-        BigDecimal tokenPrice,
+        BigDecimal entry,
         BigDecimal orderValue,
-        OrderType orderType) implements Serializable
+        TransactionType transactionType,
+        OrderType orderType,
+        Instant closedAt) implements Serializable
 {}

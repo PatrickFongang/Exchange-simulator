@@ -17,7 +17,6 @@ public class SpotPosition extends Base{
         this.token = token;
         this.quantity = quantity;
         this.avgBuyPrice = avgBuyPrice;
-        this.positionValue = BigDecimal.ZERO;
         this.timestamp = lastBuyOrder;
         this.user = user;
     }
@@ -39,11 +38,6 @@ public class SpotPosition extends Base{
     @Getter
     @Column(nullable = false)
     private BigDecimal avgBuyPrice;
-
-    @Getter
-    @Setter
-    @Column(nullable = false)
-    private BigDecimal positionValue;
 
     @Getter
     @Setter

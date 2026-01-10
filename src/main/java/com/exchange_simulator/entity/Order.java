@@ -1,25 +1,31 @@
 package com.exchange_simulator.entity;
 
 import com.exchange_simulator.enums.OrderType;
+import com.exchange_simulator.enums.TransactionType;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.knowm.xchange.dto.Order;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Entity
 @NoArgsConstructor
 @Table(name = "marketOrders")
-public class MarketOrder extends Base{
+public class Order extends Base{
 
-    public MarketOrder(String token, BigDecimal quantity, BigDecimal tokenPrice, BigDecimal orderValue, User user, OrderType orderType) {
+    public Order(String token, BigDecimal quantity, BigDecimal tokenPrice,
+                 BigDecimal orderValue, User user, TransactionType transactionType,
+                 OrderType orderType, Instant closedAt) {
         this.token = token;
         this.quantity = quantity;
         this.tokenPrice = tokenPrice;
         this.orderValue = orderValue;
         this.user = user;
+        this.transactionType = transactionType;
         this.orderType = orderType;
+        this.closedAt = closedAt;
     }
     @Getter
     @Column(nullable = false)
@@ -45,7 +51,17 @@ public class MarketOrder extends Base{
     @Getter
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private TransactionType transactionType;
+
+    @Getter
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private OrderType orderType;
+
+    @Getter
+    @Column
+    private Instant closedAt;
+
     @Override
     public String toString() {
         return  "BuyOrder: " + quantity + " of " + token;
