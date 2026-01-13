@@ -3,9 +3,9 @@ package com.exchange_simulator.entity;
 import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.enums.TransactionType;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -59,6 +59,7 @@ public class Order extends Base{
     private OrderType orderType;
 
     @Getter
+    @Setter
     @Column
     private Instant closedAt;
 

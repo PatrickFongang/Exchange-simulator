@@ -1,5 +1,6 @@
 package com.exchange_simulator.service;
 
+import com.exchange_simulator.dto.binance.MarkPriceStreamEvent;
 import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.entity.Order;
@@ -10,15 +11,78 @@ import com.exchange_simulator.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.PriorityQueue;
 
 @Service
 public class LimitOrderService extends OrderService {
+    CryptoWebSocketService cryptoWebSocketService;
+
+    record QueuePair(PriorityQueue<Order> buy, PriorityQueue<Order> sell) {}
+    HashMap<String, QueuePair> orderQueues = new HashMap<>();
+
     public LimitOrderService(OrderRepository orderRepository,
                               UserRepository userRepository,
                               CryptoDataService cryptoDataService,
-                              SpotPositionService spotPositionService)
-    { super(orderRepository, userRepository, cryptoDataService, spotPositionService); }
+                              SpotPositionService spotPositionService,
+                              CryptoWebSocketService cryptoWebSocketService
+                             )
+    {
+        // fetch db into order queues
+
+        this.cryptoWebSocketService = cryptoWebSocketService;
+        super(orderRepository, userRepository, cryptoDataService, spotPositionService);
+    }
+
+    private void addToQueue(Order order){
+        if(!orderQueues.containsKey(order.getToken())){
+            var queueBuy = new PriorityQueue<>(Comparator.comparing(Order::getTokenPrice).reversed());
+            var queueSell = new PriorityQueue<>(Comparator.comparing(Order::getTokenPrice));
+
+            orderQueues.put(order.getToken(), new QueuePair(queueBuy, queueSell));
+            cryptoWebSocketService.AddTokenListener(order.getToken(), this::handleWatcherEvent);
+        }
+
+        if(order.getTransactionType() == TransactionType.BUY){
+            orderQueues.get(order.getToken()).buy.add(order);
+        }
+        else{
+            orderQueues.get(order.getToken()).sell.add(order);
+        }
+    }
+
+    public void handleWatcherEvent(MarkPriceStreamEvent event){
+        if(orderQueues.containsKey(event.symbol())) return;
+
+        var price = event.indexPrice();
+
+        var buyQueue = orderQueues.get(event.symbol()).buy;
+        var sellQueue = orderQueues.get(event.symbol()).sell;
+
+        while(!buyQueue.isEmpty() && buyQueue.peek().getTokenPrice().compareTo(price) >= 0){
+            var order = buyQueue.poll();
+
+            // optional funds return
+            order.setClosedAt(Instant.now());
+            orderRepository.save(order);
+        }
+
+        while(!sellQueue.isEmpty() && sellQueue.peek().getTokenPrice().compareTo(price) <= 0){
+            var order = sellQueue.poll();
+
+            // optional funds return
+            order.setClosedAt(Instant.now());
+            orderRepository.save(order);
+        }
+
+        if(buyQueue.isEmpty() && sellQueue.isEmpty()){
+            // remove socket listener
+        }
+    }
+
     @Transactional
     public Order buy(OrderRequestDto dto) {
         var data = prepareToBuy(dto);
@@ -26,13 +90,12 @@ public class LimitOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        /*
-            LimitOrder Logic
-        */
-
         user.setFunds(user.getFunds().subtract(orderValue));
-        return orderRepository.save(new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
-                orderValue, user, TransactionType.BUY, OrderType.LIMIT, null));
+        var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice, orderValue, user, TransactionType.BUY, OrderType.LIMIT, null);
+
+        addToQueue(newOrder);
+
+        return orderRepository.save(newOrder);
     }
 
     @Transactional
@@ -42,13 +105,13 @@ public class LimitOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        /*
-            LimitOrder Logic
-         */
         spotPositionService.handleSell(data.user(), dto, data.tokenPrice());
 
-        return orderRepository.save(new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
-                orderValue, user, TransactionType.SELL, OrderType.LIMIT, null));
+        var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice, orderValue, user, TransactionType.SELL, OrderType.LIMIT, null);
+
+        addToQueue(newOrder);
+
+        return orderRepository.save(newOrder);
     }
 
     public List<OrderResponseDto> getUserLimitOrders(Long userId)
