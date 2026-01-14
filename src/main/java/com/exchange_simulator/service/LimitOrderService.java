@@ -13,16 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.PriorityQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.PriorityBlockingQueue;
 
 @Service
 public class LimitOrderService extends OrderService {
     CryptoWebSocketService cryptoWebSocketService;
 
-    record QueuePair(PriorityQueue<Order> buy, PriorityQueue<Order> sell) {}
-    HashMap<String, QueuePair> orderQueues = new HashMap<>();
+    record QueuePair(PriorityBlockingQueue<Order> buy, PriorityBlockingQueue<Order> sell) {}
+    ConcurrentHashMap<String, QueuePair> orderQueues = new ConcurrentHashMap<>();
 
     public LimitOrderService(OrderRepository orderRepository,
                               UserRepository userRepository,
@@ -39,8 +39,8 @@ public class LimitOrderService extends OrderService {
 
     private void addToQueue(Order order){
         if(!orderQueues.containsKey(order.getToken())){
-            var queueBuy = new PriorityQueue<>(Comparator.comparing(Order::getTokenPrice).reversed());
-            var queueSell = new PriorityQueue<>(Comparator.comparing(Order::getTokenPrice));
+            var queueBuy = new PriorityBlockingQueue<>(2, Comparator.comparing(Order::getTokenPrice).reversed());
+            var queueSell = new PriorityBlockingQueue<>(2, Comparator.comparing(Order::getTokenPrice));
 
             orderQueues.put(order.getToken(), new QueuePair(queueBuy, queueSell));
             cryptoWebSocketService.AddTokenListener(order.getToken(), this::handleWatcherEvent);
@@ -79,7 +79,7 @@ public class LimitOrderService extends OrderService {
         }
 
         if(buyQueue.isEmpty() && sellQueue.isEmpty()){
-            // remove socket listener
+            cryptoWebSocketService.RemoveTokenListener(event.symbol(), this::handleWatcherEvent);
         }
     }
 
