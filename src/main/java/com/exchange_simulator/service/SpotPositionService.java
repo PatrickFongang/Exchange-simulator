@@ -29,7 +29,7 @@ public class SpotPositionService {
 
         var position = handlePosition(dto.getToken(), dto.getQuantity(), tokenPrice, user);
 
-        spotPositionRepository.save(position);
+        spotPositionRepository.saveAndFlush(position);
 
         spotPositionRepository.updateAvgBuyPriceByUserAndPositionId(user.getId(), position.getId(), dto.getToken());
     }

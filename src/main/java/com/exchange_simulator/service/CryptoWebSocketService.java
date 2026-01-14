@@ -1,7 +1,6 @@
 package com.exchange_simulator.service;
 
 import com.exchange_simulator.dto.binance.MarkPriceStreamEvent;
-import io.reactivex.rxjava3.disposables.Disposable;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
@@ -16,7 +15,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 @Service
-public class CryptoWebSocketService implements Disposable {
+public class CryptoWebSocketService {
     HttpClient client = HttpClient.newHttpClient();
 
     public Map<String, WebSocket> openedSockets = new HashMap<>();

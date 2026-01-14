@@ -1,6 +1,7 @@
 package com.exchange_simulator.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.jpa.repository.Query;
@@ -32,7 +33,7 @@ public class SpotPosition extends Base{
 
     @Getter
     @Setter
-    @Column(nullable = false)
+    @Column(nullable = false, name = "quantity", precision = 19, scale = 8)
     private BigDecimal quantity;
 
     @Getter

@@ -32,7 +32,7 @@ public class Order extends Base{
     private String token;
 
     @Getter
-    @Column(nullable = false)
+    @Column(nullable = false, name = "quantity", precision = 19, scale = 8)
     private BigDecimal quantity;
 
     @Getter
@@ -40,7 +40,7 @@ public class Order extends Base{
     private BigDecimal tokenPrice;
 
     @Getter
-    @Column(nullable = false)
+    @Column(nullable = false, name = "orderValue", precision = 19, scale = 8)
     private BigDecimal orderValue;
 
     @Getter
