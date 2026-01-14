@@ -42,9 +42,14 @@ public class CryptoWebSocketService {
     }
 
     public void AddTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer){
-        var arr = listeners.getOrDefault(symbol, new ArrayList<>());
-        if(!arr.contains(consumer)){
-            arr.add(consumer);
+        if(!listeners.containsKey(symbol)){
+            listeners.put(symbol, new ArrayList<>(List.of(consumer)));
+        }
+        else{
+            var arr = listeners.get(symbol);
+            if(!arr.contains(consumer)){
+                arr.add(consumer);
+            }
         }
 
         if(!openedSockets.containsKey(symbol)){
@@ -70,10 +75,10 @@ public class CryptoWebSocketService {
         var markPriceStreamEvent
                 = objectMapper.readValue(message.toString(), MarkPriceStreamEvent.class);
 
-        System.out.println("Parsed event = (" +
-                " Symbol = " + markPriceStreamEvent.symbol() +
-                " Index price = " + markPriceStreamEvent.indexPrice() +
-                " )");
+//        System.out.println("Parsed event = (" +
+//                " Symbol = " + markPriceStreamEvent.symbol() +
+//                " Index price = " + markPriceStreamEvent.indexPrice() +
+//                " )");
 
         var symbol = markPriceStreamEvent.symbol();
         if (!listeners.containsKey(symbol)) return;

@@ -55,7 +55,8 @@ public class LimitOrderService extends OrderService {
     }
 
     public void handleWatcherEvent(MarkPriceStreamEvent event){
-        if(orderQueues.containsKey(event.symbol())) return;
+        System.out.println(event.symbol() + " -> " + event.indexPrice());
+        if(!orderQueues.containsKey(event.symbol())) return;
 
         var price = event.indexPrice();
 
@@ -66,16 +67,16 @@ public class LimitOrderService extends OrderService {
             var order = buyQueue.poll();
 
             // optional funds return
-            order.setClosedAt(Instant.now());
-            orderRepository.save(order);
+            System.out.println("Filling buy order " + order.getId());
+            this.finalizeBuyOrder(order);
         }
 
         while(!sellQueue.isEmpty() && sellQueue.peek().getTokenPrice().compareTo(price) <= 0){
             var order = sellQueue.poll();
 
             // optional funds return
-            order.setClosedAt(Instant.now());
-            orderRepository.save(order);
+            System.out.println("Filling sell order " + order.getId());
+            this.finalizeSellOrder(order);
         }
 
         if(buyQueue.isEmpty() && sellQueue.isEmpty()){
@@ -114,6 +115,23 @@ public class LimitOrderService extends OrderService {
         return orderRepository.save(newOrder);
     }
 
+    private void finalizeBuyOrder(Order order){
+        order.setClosedAt(Instant.now());
+
+        // handle buy order using spotPositionService
+
+        orderRepository.save(order);
+    }
+
+    private void finalizeSellOrder(Order order){
+        order.setClosedAt(Instant.now());
+
+        // handle buy order using spotPositionService
+
+        orderRepository.save(order);
+    }
+
+
     public List<OrderResponseDto> getUserLimitOrders(Long userId)
     {
         findUserById(userId);
@@ -142,6 +160,6 @@ public class LimitOrderService extends OrderService {
                 .toList();
     }
     /*
-        TODO: canceLimitOrder method, processPendingLimitOrders method
+        TODO: cancelLimitOrder method, processPendingLimitOrders method
      */
 }

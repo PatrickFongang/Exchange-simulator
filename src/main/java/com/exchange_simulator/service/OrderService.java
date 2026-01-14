@@ -38,7 +38,7 @@ public class OrderService {
         var user = findUserByIdWithLock(dto.getUserId());
         validateQuantity(dto.getQuantity());
 
-        var tokenPrice = cryptoDataService.getPrice(dto.getToken());
+        var tokenPrice = dto.getLimit() == null ? cryptoDataService.getPrice(dto.getToken()) : dto.getLimit();
         var orderValue = tokenPrice.multiply(dto.getQuantity());
 
         return new OrderFinalization(user, orderValue, tokenPrice);
