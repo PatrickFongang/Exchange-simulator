@@ -1,7 +1,6 @@
 package com.exchange_simulator.service;
 
 import com.exchange_simulator.dto.binance.MarkPriceStreamEvent;
-import io.reactivex.rxjava3.disposables.Disposable;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 
@@ -9,22 +8,21 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 @Service
-public class CryptoWebSocketService implements Disposable {
+public class CryptoWebSocketService {
     HttpClient client = HttpClient.newHttpClient();
 
-    public Map<String, WebSocket> openedSockets = new HashMap<>();
-    public Map<String, List<Consumer<MarkPriceStreamEvent>>> listeners= new HashMap<>();
+    public Map<String, WebSocket> openedSockets = new ConcurrentHashMap<>();
+
+    public Map<String, List<Consumer<MarkPriceStreamEvent>>> listeners = new ConcurrentHashMap<>();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    private boolean isDisposedFlag = false;
 
     public CryptoWebSocketService(){
         System.out.println("Start WebSocket service!");
@@ -62,16 +60,10 @@ public class CryptoWebSocketService implements Disposable {
         }
     }
 
-
-    public boolean isDisposed(){
-        return isDisposedFlag;
-    }
-
     public void dispose(){
         for(var symbol : openedSockets.keySet()){
             RemoveTokenWebSocket(symbol);
         }
-        isDisposedFlag = true;
     }
 
     private void HandleMarkPriceMessage(CharSequence message) {
