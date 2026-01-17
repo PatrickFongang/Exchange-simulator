@@ -26,13 +26,14 @@ public class MarketOrderService extends OrderService {
         var user = data.user();
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
-        var order = orderRepository.save(new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
-                orderValue, user, TransactionType.BUY, OrderType.MARKET, Instant.now()));
 
-        spotPositionService.handleBuy(user, dto, tokenPrice);
+        var order = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+                orderValue, user, TransactionType.BUY, OrderType.MARKET, Instant.now());
+
+        spotPositionService.handleBuy(order);
 
         user.setFunds(user.getFunds().subtract(orderValue));
-        return order;
+        return orderRepository.save(order);
     }
 
     @Transactional
@@ -42,11 +43,13 @@ public class MarketOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        spotPositionService.handleSell(data.user(), dto, data.tokenPrice());
+        var order = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
+                orderValue, user, TransactionType.SELL, OrderType.MARKET, Instant.now());
+
+        spotPositionService.handleSell(order);
 
         user.setFunds(user.getFunds().add(orderValue));
-        return orderRepository.save(new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
-                orderValue, user, TransactionType.SELL, OrderType.MARKET, Instant.now()));
+        return orderRepository.save(order);
     }
 
     public List<OrderResponseDto> getUserMarketOrders(Long userId)

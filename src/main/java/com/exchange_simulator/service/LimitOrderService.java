@@ -8,12 +8,14 @@ import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.enums.TransactionType;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.UserRepository;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
@@ -22,7 +24,9 @@ public class LimitOrderService extends OrderService {
     CryptoWebSocketService cryptoWebSocketService;
 
     record QueuePair(PriorityBlockingQueue<Order> buy, PriorityBlockingQueue<Order> sell) {}
-    ConcurrentHashMap<String, QueuePair> orderQueues = new ConcurrentHashMap<>();
+    Map<String, QueuePair> orderQueues = new ConcurrentHashMap<>();
+
+    Map<String, Runnable> listenerCleaners = new ConcurrentHashMap<>();
 
     public LimitOrderService(OrderRepository orderRepository,
                               UserRepository userRepository,
@@ -43,7 +47,11 @@ public class LimitOrderService extends OrderService {
             var queueSell = new PriorityBlockingQueue<>(2, Comparator.comparing(Order::getTokenPrice));
 
             orderQueues.put(order.getToken(), new QueuePair(queueBuy, queueSell));
-            cryptoWebSocketService.AddTokenListener(order.getToken(), this::handleWatcherEvent);
+        }
+
+        if(!listenerCleaners.containsKey(order.getToken())){
+            listenerCleaners.put(order.getToken(),
+                this.cryptoWebSocketService.AddTokenListener(order.getToken(), this::handleWatcherEvent));
         }
 
         if(order.getTransactionType() == TransactionType.BUY){
@@ -79,8 +87,8 @@ public class LimitOrderService extends OrderService {
             this.finalizeSellOrder(order);
         }
 
-        if(buyQueue.isEmpty() && sellQueue.isEmpty()){
-            cryptoWebSocketService.RemoveTokenListener(event.symbol(), this::handleWatcherEvent);
+        if(buyQueue.isEmpty() && sellQueue.isEmpty() && listenerCleaners.containsKey(event.symbol())){
+            listenerCleaners.get(event.symbol()).run();
         }
     }
 
@@ -106,27 +114,27 @@ public class LimitOrderService extends OrderService {
         var orderValue = data.orderValue();
         var tokenPrice = data.tokenPrice();
 
-        spotPositionService.handleSell(data.user(), dto, data.tokenPrice());
-
         var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice, orderValue, user, TransactionType.SELL, OrderType.LIMIT, null);
+        spotPositionService.handleSell(newOrder);
 
         addToQueue(newOrder);
 
         return orderRepository.save(newOrder);
     }
 
-    private void finalizeBuyOrder(Order order){
+    void finalizeBuyOrder(Order order){
         order.setClosedAt(Instant.now());
 
-        // handle buy order using spotPositionService
+        spotPositionService.handleBuy(order);
 
         orderRepository.save(order);
     }
 
-    private void finalizeSellOrder(Order order){
+    void finalizeSellOrder(Order order){
         order.setClosedAt(Instant.now());
 
-        // handle buy order using spotPositionService
+        var user = order.getUser();
+        user.setFunds(user.getFunds().add(order.getOrderValue()));
 
         orderRepository.save(order);
     }

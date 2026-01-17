@@ -3,15 +3,12 @@ package com.exchange_simulator.service;
 import com.exchange_simulator.dto.binance.MarkPriceStreamEvent;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
-
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 @Service
@@ -20,11 +17,14 @@ public class CryptoWebSocketService {
 
     public Map<String, WebSocket> openedSockets = new ConcurrentHashMap<>();
 
-    public Map<String, List<Consumer<MarkPriceStreamEvent>>> listeners = new ConcurrentHashMap<>();
+    public Map<String, CopyOnWriteArrayList<Consumer<MarkPriceStreamEvent>>> listeners = new ConcurrentHashMap<>();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public CryptoWebSocketService(){
+    private final Executor callbackExecutor;
+
+    public CryptoWebSocketService(Executor socketCallbackExecutor){
+        this.callbackExecutor = socketCallbackExecutor;
         System.out.println("Start WebSocket service!");
     }
 
@@ -41,9 +41,9 @@ public class CryptoWebSocketService {
         }
     }
 
-    public void AddTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer){
+    public Runnable AddTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer){
         if(!listeners.containsKey(symbol)){
-            listeners.put(symbol, new ArrayList<>(List.of(consumer)));
+            listeners.put(symbol, new CopyOnWriteArrayList<>(List.of(consumer)));
         }
         else{
             var arr = listeners.get(symbol);
@@ -55,6 +55,8 @@ public class CryptoWebSocketService {
         if(!openedSockets.containsKey(symbol)){
             CreateTokenWebSocket(symbol);
         }
+
+        return () -> this.RemoveTokenListener(symbol, consumer);
     }
 
     public void RemoveTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer){
@@ -75,16 +77,17 @@ public class CryptoWebSocketService {
         var markPriceStreamEvent
                 = objectMapper.readValue(message.toString(), MarkPriceStreamEvent.class);
 
-//        System.out.println("Parsed event = (" +
-//                " Symbol = " + markPriceStreamEvent.symbol() +
-//                " Index price = " + markPriceStreamEvent.indexPrice() +
-//                " )");
-
         var symbol = markPriceStreamEvent.symbol();
         if (!listeners.containsKey(symbol)) return;
 
         for (var listener : listeners.get(symbol)) {
-            listener.accept(markPriceStreamEvent);
+            callbackExecutor.execute(() -> {
+                try {
+                    listener.accept(markPriceStreamEvent);
+                } catch (Exception ex) {
+                    System.out.println("Exception inside socket callback: " + ex.getMessage());
+                }
+            });
         }
     }
 

@@ -2,6 +2,7 @@ package com.exchange_simulator.service;
 
 import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
+import com.exchange_simulator.entity.Order;
 import com.exchange_simulator.entity.SpotPosition;
 import com.exchange_simulator.entity.User;
 import com.exchange_simulator.exceptionHandler.exceptions.NotEnoughResourcesException;
@@ -25,24 +26,24 @@ public class SpotPositionService {
     private final UserRepository userRepository;
     private final CryptoDataService cryptoDataService;
 
-    public void handleBuy(User user, OrderRequestDto dto, BigDecimal tokenPrice) {
+    public void handleBuy(Order order) {
 
-        var position = handlePosition(dto.getToken(), dto.getQuantity(), tokenPrice, user);
+        var position = handlePosition(order.getToken(), order.getQuantity(), order.getTokenPrice(), order.getUser());
 
         spotPositionRepository.saveAndFlush(position);
 
-        spotPositionRepository.updateAvgBuyPriceByUserAndPositionId(user.getId(), position.getId(), dto.getToken());
+        spotPositionRepository.updateAvgBuyPriceByUserAndPositionId(order.getId(), position.getId(), order.getToken());
     }
 
-    public void handleSell(User user, OrderRequestDto dto, BigDecimal tokenPrice) {
-        var position = findPositionByToken(user, dto.getToken());
+    public void handleSell(Order order) {
+        var position = findPositionByToken(order.getUser(), order.getToken());
         if(position.isEmpty())
-            throw new SpotPositionNotFoundException(user,  dto.getToken());
+            throw new SpotPositionNotFoundException(order.getUser(), order.getToken());
 
         var ownedTokens = position.get().getQuantity();
-        validateResources(ownedTokens, dto.getQuantity());
+        validateResources(ownedTokens, order.getQuantity());
 
-        ownedTokens = ownedTokens.subtract(dto.getQuantity());
+        ownedTokens = ownedTokens.subtract(order.getQuantity());
         position.get().setQuantity(ownedTokens);
 
         if (ownedTokens.compareTo(BigDecimal.ZERO) == 0) {
