@@ -6,10 +6,10 @@ import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.entity.Order;
 import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.enums.TransactionType;
-import com.exchange_simulator.exceptionHandler.exceptions.OrderNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
 import com.exchange_simulator.repository.UserRepository;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,14 +67,17 @@ public class LimitOrderService extends OrderService {
         }
     }
 
+    @EventListener
+    @Async
+    @Transactional
     public void handleWatcherEvent(MarkPriceStreamEvent event){
-        System.out.println(event.symbol() + " -> " + event.indexPrice());
-        if(!orderQueues.containsKey(event.symbol())) return;
+        System.out.println(event.getSymbol() + " -> " + event.getIndexPrice());
+        if(!orderQueues.containsKey(event.getSymbol())) return;
 
-        var price = event.indexPrice();
+        var price = event.getIndexPrice();
 
-        var buyQueue = orderQueues.get(event.symbol()).buy;
-        var sellQueue = orderQueues.get(event.symbol()).sell;
+        var buyQueue = orderQueues.get(event.getSymbol()).buy;
+        var sellQueue = orderQueues.get(event.getSymbol()).sell;
 
         while(!buyQueue.isEmpty() && buyQueue.peek().getTokenPrice().compareTo(price) >= 0){
             var order = buyQueue.poll();
@@ -94,8 +97,8 @@ public class LimitOrderService extends OrderService {
             }else cancelledOrders.remove(order.getId());
         }
 
-        if(buyQueue.isEmpty() && sellQueue.isEmpty() && listenerCleaners.containsKey(event.symbol())){
-            listenerCleaners.get(event.symbol()).run();
+        if(buyQueue.isEmpty() && sellQueue.isEmpty() && listenerCleaners.containsKey(event.getSymbol())){
+            listenerCleaners.get(event.getSymbol()).run();
         }
     }
 
@@ -133,10 +136,9 @@ public class LimitOrderService extends OrderService {
 
     void finalizeBuyOrder(Order order){
         order.setClosedAt(Instant.now());
+        orderRepository.saveAndFlush(order);
 
         spotPositionService.handleBuy(order);
-
-        orderRepository.save(order);
     }
 
     void finalizeSellOrder(Order order){

@@ -5,8 +5,6 @@ import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.enums.TransactionType;
 import com.exchange_simulator.exceptionHandler.exceptions.OrderNotFoundException;
 import com.exchange_simulator.service.LimitOrderService;
-import com.exchange_simulator.service.MarketOrderService;
-import com.exchange_simulator.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,8 +51,8 @@ public class LimitOrderController {
         var order = limitOrderService.sell(orderRequestDto);
         return ResponseEntity.ok(limitOrderService.getDto(order));
     }
-    @DeleteMapping("/{userId}/limit/cancell/{orderId}")
-    public ResponseEntity<OrderResponseDto> cancellOrder(
+    @DeleteMapping("/{userId}/limit/cancel/{orderId}")
+    public ResponseEntity<OrderResponseDto> cancelOrder(
             @PathVariable Long userId,
             @PathVariable Long orderId
     ){

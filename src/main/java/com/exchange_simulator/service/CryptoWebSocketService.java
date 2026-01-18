@@ -1,6 +1,8 @@
 package com.exchange_simulator.service;
 
 import com.exchange_simulator.dto.binance.MarkPriceStreamEvent;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
 import java.net.URI;
@@ -21,15 +23,15 @@ public class CryptoWebSocketService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final Executor callbackExecutor;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
-    public CryptoWebSocketService(Executor socketCallbackExecutor){
-        this.callbackExecutor = socketCallbackExecutor;
+    public CryptoWebSocketService(){
         System.out.println("Start WebSocket service!");
     }
 
     private void CreateTokenWebSocket(String symbol){
-        var url = "wss://fstream.binance.com/ws/"+symbol.toLowerCase()+"@markPrice@1s";
+        var url = "wss://fstream.binance.com/ws/"+symbol.toLowerCase()+"usdt@markPrice@1s";
         client.newWebSocketBuilder()
                 .buildAsync(URI.create(url), new CryptoWebSocketListener(symbol))
                 .join();
@@ -77,18 +79,10 @@ public class CryptoWebSocketService {
         var markPriceStreamEvent
                 = objectMapper.readValue(message.toString(), MarkPriceStreamEvent.class);
 
-        var symbol = markPriceStreamEvent.symbol();
-        if (!listeners.containsKey(symbol)) return;
+        var symbol = markPriceStreamEvent.getSymbol().toLowerCase();
+        markPriceStreamEvent.setSymbol(symbol.substring(0, symbol.length()-4));
 
-        for (var listener : listeners.get(symbol)) {
-            callbackExecutor.execute(() -> {
-                try {
-                    listener.accept(markPriceStreamEvent);
-                } catch (Exception ex) {
-                    System.out.println("Exception inside socket callback: " + ex.getMessage());
-                }
-            });
-        }
+        eventPublisher.publishEvent(markPriceStreamEvent);
     }
 
     class CryptoWebSocketListener implements WebSocket.Listener{

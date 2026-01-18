@@ -8,8 +8,6 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 
 public interface SpotPositionRepository extends JpaRepository<SpotPosition, Long> {
@@ -29,7 +27,7 @@ public interface SpotPositionRepository extends JpaRepository<SpotPosition, Long
             "and o.token = :token " +
             "and o.transactionType = 'BUY' " +
             "and o.closedAt is not null " +
-            "and o.createdAt >= p.timestamp) " +
+            "and o.closedAt >= p.timestamp) " +
             "where p.user.id = :userId and p.id = :posId")
     void updateAvgBuyPriceByUserAndPositionId (Long userId, Long posId, String token);
 
