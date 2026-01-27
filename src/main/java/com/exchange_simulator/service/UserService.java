@@ -29,8 +29,9 @@ public class UserService {
             throw new UserAlreadyExistsException("User with email '" + userData.getEmail() + "' already exists");
         }
         String password = passwordEncoder.encode(userData.getPassword());
+        String role = userData.getRole().toUpperCase();
         return userRepository.save(new User(userData.getUsername(), userData.getEmail(),
-                password, userData.getRole()));
+                password, role));
     }
 
     public Optional<User> getUserById(Long id) {

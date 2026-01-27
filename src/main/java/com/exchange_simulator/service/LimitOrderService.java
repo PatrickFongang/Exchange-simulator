@@ -41,7 +41,6 @@ public class LimitOrderService extends OrderService {
                               CryptoWebSocketService cryptoWebSocketService,
                              SpotPositionRepository spotPositionRepository)
     {
-        // fetch db into order queues
 
         this.cryptoWebSocketService = cryptoWebSocketService;
         super(orderRepository, userRepository, cryptoDataService, spotPositionService);
