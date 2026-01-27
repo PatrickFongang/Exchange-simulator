@@ -1,4 +1,4 @@
-package com.exchange_simulator.exceptionHandler.exceptions;
+package com.exchange_simulator.exceptionHandler.exceptions.exchange;
 
 public class OrderNotFoundException extends ExchangeException {
     public OrderNotFoundException(Long orderId) {

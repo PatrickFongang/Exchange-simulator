@@ -13,7 +13,7 @@ public record UserResponseDto(
         Long id,
         Instant updatedAt,
         Instant createdAt,
-        String name,
+        String username,
         String email,
         BigDecimal funds) implements Serializable
 {}

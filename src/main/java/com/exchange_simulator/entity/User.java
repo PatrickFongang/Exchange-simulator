@@ -21,12 +21,23 @@ public class User extends Base{
     private final List<SpotPosition> positions = new ArrayList<>();
 
     @Getter
-    @Column(nullable = false)
-    private String name;
+    @Setter
+    @Column(nullable = false, unique = true)
+    private String username;
 
     @Getter
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @Getter
+    @Setter
+    @Column(nullable = false)
+    private String password;
+
+    @Getter
+    @Setter
+    @Column(nullable = false)
+    private String role;
 
     @Getter
     @Setter
@@ -40,25 +51,27 @@ public class User extends Base{
 
     public User() {}
 
-    public User(String name, String email){
-        this.name = name;
+    public User(String username, String email, String password, String role) {
+        this.username = username;
         this.email = email;
+        this.password = password;
+        this.role = role;
     }
 
     @Override
     public String toString() {
-        return "User " + name + " with email = " + email;
+        return "User " + username + " with email = " + email;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(positions, user.positions) && Objects.equals(name, user.name) && Objects.equals(email, user.email) && Objects.equals(funds, user.funds);
+        return Objects.equals(positions, user.positions) && Objects.equals(username, user.username) && Objects.equals(email, user.email) && Objects.equals(funds, user.funds);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(positions, name, email, funds);
+        return Objects.hash(positions, username, email, funds);
     }
 }

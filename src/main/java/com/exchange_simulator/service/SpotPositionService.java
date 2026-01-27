@@ -1,13 +1,12 @@
 package com.exchange_simulator.service;
 
-import com.exchange_simulator.dto.order.OrderRequestDto;
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.entity.Order;
 import com.exchange_simulator.entity.SpotPosition;
 import com.exchange_simulator.entity.User;
 import com.exchange_simulator.enums.OrderType;
-import com.exchange_simulator.exceptionHandler.exceptions.NotEnoughResourcesException;
-import com.exchange_simulator.exceptionHandler.exceptions.SpotPositionNotFoundException;
+import com.exchange_simulator.exceptionHandler.exceptions.exchange.NotEnoughResourcesException;
+import com.exchange_simulator.exceptionHandler.exceptions.exchange.SpotPositionNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
 import com.exchange_simulator.repository.UserRepository;

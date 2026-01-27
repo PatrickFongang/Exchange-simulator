@@ -1,4 +1,4 @@
-package com.exchange_simulator.exceptionHandler.exceptions;
+package com.exchange_simulator.exceptionHandler.exceptions.exchange;
 
 import java.math.BigDecimal;
 

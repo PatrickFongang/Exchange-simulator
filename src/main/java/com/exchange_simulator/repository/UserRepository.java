@@ -15,13 +15,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("select u from User u where u.id = :id")
     Optional<User> findByIdWithLock(Long id);
 
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
+
     @Transactional
     @Modifying
-    @Query("update User u set u.name = :name where u.id = :id")
-    int updateNameById(Long id, String name);
+    @Query("update User u set u.username = :name where u.id = :id")
+    int updateUsernameById(Long id, String username);
 
     @Transactional
     @Modifying
     @Query("update User u set u.email = :email where u.id = :id")
     int updateEmailById (Long id, String email);
+
+    Optional<User> findByUsername(String username);
 }

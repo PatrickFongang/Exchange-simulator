@@ -1,13 +1,20 @@
 package com.exchange_simulator.exceptionHandler;
 
 import com.exchange_simulator.dto.error.ErrorResponseDto;
-import com.exchange_simulator.exceptionHandler.exceptions.*;
+import com.exchange_simulator.exceptionHandler.exceptions.database.DatabaseException;
+import com.exchange_simulator.exceptionHandler.exceptions.database.UserAlreadyExistsException;
+import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundException;
+import com.exchange_simulator.exceptionHandler.exceptions.exchange.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.xml.crypto.Data;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
@@ -60,6 +67,34 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(OrderNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleOrderNotFound(ExchangeException ex, HttpServletRequest request) {
+        return new ResponseEntity<>(
+                buildResponse(HttpStatus.BAD_REQUEST, ex, request),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleUsernameNotFound(DatabaseException ex, HttpServletRequest request) {
+        return new ResponseEntity<>(
+                buildResponse(HttpStatus.NOT_FOUND, ex, request),
+                HttpStatus.NOT_FOUND
+        );
+    }
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDto> handleUserAlreadyExists(DatabaseException ex, HttpServletRequest request) {
+        return new ResponseEntity<>(
+                buildResponse(HttpStatus.BAD_REQUEST, ex, request),
+                HttpStatus.BAD_REQUEST
+        );
+    }
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDto> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+        return new ResponseEntity<>(
+                buildResponse(HttpStatus.FORBIDDEN, ex, request),
+                HttpStatus.FORBIDDEN
+        );
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpServletRequest request) {
         return new ResponseEntity<>(
                 buildResponse(HttpStatus.BAD_REQUEST, ex, request),
                 HttpStatus.BAD_REQUEST
