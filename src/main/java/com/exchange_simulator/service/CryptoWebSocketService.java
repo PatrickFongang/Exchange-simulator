@@ -10,6 +10,7 @@ import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
@@ -37,13 +38,18 @@ public class CryptoWebSocketService {
                 .join();
     }
 
-    private void RemoveTokenWebSocket(String symbol){
+    private void RemoveTokenWebSocket(String symbol, Optional<Runnable> cb){
         if(openedSockets.containsKey(symbol)){
-            openedSockets.get(symbol).sendClose(500, "Internal request");
+            openedSockets.get(symbol).sendClose(WebSocket.NORMAL_CLOSURE, "Internal request")
+                    .thenAccept(_ -> cb.ifPresent(Runnable::run))
+                    .exceptionally(ex -> {
+                        System.out.println("Error sending close: " + ex);
+                        return null;
+                    });
         }
     }
 
-    public Runnable AddTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer){
+    public Consumer<Runnable> AddTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer){
         if(!listeners.containsKey(symbol)){
             listeners.put(symbol, new CopyOnWriteArrayList<>(List.of(consumer)));
         }
@@ -58,20 +64,20 @@ public class CryptoWebSocketService {
             CreateTokenWebSocket(symbol);
         }
 
-        return () -> this.RemoveTokenListener(symbol, consumer);
+        return (cb) -> this.RemoveTokenListener(symbol, consumer, cb);
     }
 
-    public void RemoveTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer){
+    public void RemoveTokenListener(String symbol, Consumer<MarkPriceStreamEvent> consumer, Runnable cb){
         listeners.get(symbol).remove(consumer);
 
         if(listeners.get(symbol).isEmpty()){
-            RemoveTokenWebSocket(symbol);
+            RemoveTokenWebSocket(symbol, Optional.of(cb));
         }
     }
 
     public void dispose(){
         for(var symbol : openedSockets.keySet()){
-            RemoveTokenWebSocket(symbol);
+            RemoveTokenWebSocket(symbol, Optional.empty());
         }
     }
 
