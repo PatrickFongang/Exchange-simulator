@@ -36,4 +36,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     BigDecimal token(String token);
 
     List<Order> findByClosedAtIsNull();
+
+    @Query("select o from Order o " +
+            " where o.user.id = :userId " +
+            " and o.closedAt IS NULL " +
+            " and o.token = :token " +
+            " and o.transactionType = 'SELL'")
+    List<Order> findOpenSellOrdersByUserAndToken(Long userId, String token);
 }

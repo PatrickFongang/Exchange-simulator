@@ -65,6 +65,6 @@ public class Order extends Base{
 
     @Override
     public String toString() {
-        return  "BuyOrder: " + quantity + " of " + token;
+        return  "Order: " + transactionType + " of " + quantity + " " + token + " " + " closed at " + closedAt;
     }
 }

@@ -113,6 +113,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleUnhandledError(Exception ex, HttpServletRequest request) {
         System.out.println("Received unhandled error:");
         System.out.println(ex.toString());
+        ex.printStackTrace(System.out);
 
         return new ResponseEntity<>(
                 buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex, request),

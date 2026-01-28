@@ -6,6 +6,7 @@ import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.entity.Order;
 import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.enums.TransactionType;
+import com.exchange_simulator.exceptionHandler.exceptions.exchange.SpotPositionNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
 import com.exchange_simulator.repository.UserRepository;
@@ -183,7 +184,8 @@ public class LimitOrderService extends OrderService {
 
         orderRepository.save(order);
 
-        spotPositionService.deletePosition(order.getUser(), order.getToken());
+        var position = spotPositionRepository.findByUserIdAndToken(user.getId(), order.getToken());
+        spotPositionService.syncPositionExist(position);
     }
 
 
@@ -220,13 +222,17 @@ public class LimitOrderService extends OrderService {
     {
         cancelledOrders.add(order.getId());
 
-        var position = spotPositionService.findPositionByToken(order.getUser(), order.getToken()).get();
+        var positionOptional = spotPositionService.findPositionByToken(order.getUser(), order.getToken());
+
+        if(positionOptional.isEmpty()) throw new SpotPositionNotFoundException(order.getUser(), order.getToken());
+
+        var position = positionOptional.get();
+
         position.setQuantity(position.getQuantity().add(order.getQuantity()));
         spotPositionRepository.save(position);
+        spotPositionService.syncPositionExist(position);
 
         orderRepository.delete(order);
-        for(var i : cancelledOrders)
-            System.out.println(i);
     }
     @Transactional
     public void cancelBuyOrder(Order order)
@@ -237,9 +243,6 @@ public class LimitOrderService extends OrderService {
         user.setFunds(user.getFunds().add(order.getOrderValue()));
         userRepository.save(user);
 
-
         orderRepository.delete(order);
-        for(var i : cancelledOrders)
-            System.out.println(i);
     }
 }

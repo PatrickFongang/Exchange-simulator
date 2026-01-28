@@ -32,4 +32,5 @@ public interface SpotPositionRepository extends JpaRepository<SpotPosition, Long
             "where p.user.id = :userId and p.id = :posId")
     void updateAvgBuyPriceByUserAndPositionId(Long userId, Long posId, String token);
 
+    SpotPosition findByUserIdAndToken(Long userId, String token);
 }

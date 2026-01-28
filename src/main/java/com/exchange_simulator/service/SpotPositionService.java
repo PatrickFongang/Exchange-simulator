@@ -4,13 +4,11 @@ import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.entity.Order;
 import com.exchange_simulator.entity.SpotPosition;
 import com.exchange_simulator.entity.User;
-import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.NotEnoughResourcesException;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.SpotPositionNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
 import com.exchange_simulator.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -47,9 +45,7 @@ public class SpotPositionService {
         ownedTokens = ownedTokens.subtract(order.getQuantity());
         position.get().setQuantity(ownedTokens);
 
-        if (ownedTokens.compareTo(BigDecimal.ZERO) == 0 && order.getOrderType() == OrderType.MARKET) {
-            spotPositionRepository.delete(position.get());
-        } else {
+        if(syncPositionExist(position.get())){
             spotPositionRepository.save(position.get());
         }
     }
@@ -78,11 +74,24 @@ public class SpotPositionService {
         return positions.stream().filter(p -> p.getToken().equals(token)).findFirst();
     }
 
-    @Transactional
-    public void deletePosition(User user, String token) {
-        var position = findPositionByToken(user, token).get();
-        spotPositionRepository.delete(position);
+    public boolean syncPositionExist(SpotPosition position){
+        if(position.getQuantity().compareTo(BigDecimal.ZERO) > 0){
+            return true;
+        }
+
+        var openSell = orderRepository
+                .findOpenSellOrdersByUserAndToken(
+                        position.getUser().getId(),
+                        position.getToken());
+
+        if(openSell.isEmpty()){
+            spotPositionRepository.delete(position);
+            return false;
+        }
+
+        return true;
     }
+
     private SpotPosition handlePosition(String token, BigDecimal quantity, BigDecimal tokenPrice, User user) {
         Optional<SpotPosition> position = findPositionByToken(user, token);
 
