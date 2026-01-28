@@ -2,10 +2,12 @@ package com.exchange_simulator.controller;
 
 import com.exchange_simulator.dto.user.UserResponseDto;
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundException;
+import com.exchange_simulator.security.CustomUserDetails;
 import com.exchange_simulator.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +26,15 @@ public class UserController {
                 .map(UserService::getDto)
                 .toList());
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDto> getMe(@AuthenticationPrincipal CustomUserDetails user){
+        var found = userService.getUserById(user.getId());
+        return found
+                .map(value -> ResponseEntity.ok().body(UserService.getDto(value)))
+                .orElseThrow(() -> new UserNotFoundException(user.getId()));
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUser(@PathVariable("id") Long id){
