@@ -1,0 +1,493 @@
+openapi: 3.1.0
+info:
+  title: Exchange Simulator Docs
+  description: API Docs
+  version: "1.0"
+servers:
+- url: http://localhost:8080
+  description: Generated server url
+paths:
+  /api/users-orders/market/sell:
+    get:
+      tags:
+      - market-order-controller
+      operationId: getUserSellOrders
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+    post:
+      tags:
+      - market-order-controller
+      operationId: sell
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequestDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/market/buy:
+    get:
+      tags:
+      - market-order-controller
+      operationId: getUserBuyOrders
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+    post:
+      tags:
+      - market-order-controller
+      operationId: buy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequestDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/limit/sell:
+    get:
+      tags:
+      - limit-order-controller
+      operationId: getUserSellOrders_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+    post:
+      tags:
+      - limit-order-controller
+      operationId: sell_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequestDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/limit/buy:
+    get:
+      tags:
+      - limit-order-controller
+      operationId: getUserBuyOrders_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+    post:
+      tags:
+      - limit-order-controller
+      operationId: buy_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderRequestDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderResponseDto"
+  /api/auth/registration:
+    post:
+      tags:
+      - auth-controller
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateRequestDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+  /api/auth/logout:
+    post:
+      tags:
+      - auth-controller
+      operationId: logout
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+  /api/auth/login:
+    post:
+      tags:
+      - auth-controller
+      operationId: authUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequestDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: string
+  /api/users:
+    get:
+      tags:
+      - user-controller
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponseDto"
+  /api/users/{id}:
+    get:
+      tags:
+      - user-controller
+      operationId: getUser
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+  /api/users/me:
+    get:
+      tags:
+      - user-controller
+      operationId: getMe
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponseDto"
+  /api/users-positions:
+    get:
+      tags:
+      - spot-position-controller
+      operationId: getPortfolio
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SpotPositionResponseDto"
+  /api/users-positions/{token}:
+    get:
+      tags:
+      - spot-position-controller
+      operationId: getSpotPosition
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SpotPositionResponseDto"
+  /api/users-orders:
+    get:
+      tags:
+      - order-controller
+      operationId: getUserOrders
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/sell:
+    get:
+      tags:
+      - order-controller
+      operationId: getUserSellOrders_2
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/market:
+    get:
+      tags:
+      - market-order-controller
+      operationId: getUserOrders_1
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/limit:
+    get:
+      tags:
+      - limit-order-controller
+      operationId: getUserOrders_2
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/buy:
+    get:
+      tags:
+      - order-controller
+      operationId: getUserBuyOrders_2
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/book/{token}/sell:
+    get:
+      tags:
+      - limit-order-controller
+      operationId: sellOrderBook
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/book/{token}/buy:
+    get:
+      tags:
+      - limit-order-controller
+      operationId: buyOrderBook
+      parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OrderResponseDto"
+  /api/users-orders/limit/{orderId}:
+    delete:
+      tags:
+      - limit-order-controller
+      operationId: cancelOrder
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderResponseDto"
+components:
+  schemas:
+    OrderRequestDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        token:
+          type: string
+        limit:
+          type: number
+        quantity:
+          type: number
+    OrderResponseDto:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        orderId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        token:
+          type: string
+        quantity:
+          type: number
+        entry:
+          type: number
+        orderValue:
+          type: number
+        transactionType:
+          type: string
+          enum:
+          - BUY
+          - SELL
+        orderType:
+          type: string
+          enum:
+          - LIMIT
+          - MARKET
+        closedAt:
+          type: string
+          format: date-time
+    UserCreateRequestDto:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+        role:
+          type: string
+      required:
+      - email
+      - username
+    UserResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        username:
+          type: string
+        email:
+          type: string
+        funds:
+          type: number
+    LoginRequestDto:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    SpotPositionResponseDto:
+      type: object
+      properties:
+        positionId:
+          type: integer
+          format: int64
+        token:
+          type: string
+        quantity:
+          type: number
+        avgBuyPrice:
+          type: number
+        positionValue:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
