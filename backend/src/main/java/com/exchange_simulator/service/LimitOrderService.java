@@ -38,6 +38,7 @@ public class LimitOrderService extends OrderService {
 
     public LimitOrderService(OrderRepository orderRepository,
                              UserRepository userRepository,
+                             UserService userService,
                              CryptoDataService cryptoDataService,
                              SpotPositionService spotPositionService,
                              CryptoWebSocketService cryptoWebSocketService,
@@ -46,7 +47,7 @@ public class LimitOrderService extends OrderService {
     {
 
         this.cryptoWebSocketService = cryptoWebSocketService;
-        super(orderRepository, userRepository, cryptoDataService, spotPositionService);
+        super(orderRepository, userRepository, userService, cryptoDataService, spotPositionService);
         this.spotPositionRepository = spotPositionRepository;
 
         syncOrdersToQueue();
@@ -200,7 +201,7 @@ public class LimitOrderService extends OrderService {
 
     public List<OrderResponseDto> getUserLimitOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByUserId(userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.LIMIT))
@@ -209,7 +210,7 @@ public class LimitOrderService extends OrderService {
     }
     public List<OrderResponseDto> getUserBuyLimitOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.BUY, userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.LIMIT))
@@ -218,7 +219,7 @@ public class LimitOrderService extends OrderService {
     }
     public List<OrderResponseDto> getUserSellLimitOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.SELL,userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.LIMIT))

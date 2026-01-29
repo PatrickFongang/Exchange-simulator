@@ -4,6 +4,7 @@ import com.exchange_simulator.dto.user.UserCreateRequestDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
 import com.exchange_simulator.entity.User;
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserAlreadyExistsException;
+import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundException;
 import com.exchange_simulator.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -51,5 +52,11 @@ public class UserService {
                 user.getEmail(),
                 user.getFunds()
         );
+    }
+    public User findUserByIdWithLock(Long userId) {
+        return userRepository.findByIdWithLock(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    }
+    public User findUserById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
     }
 }

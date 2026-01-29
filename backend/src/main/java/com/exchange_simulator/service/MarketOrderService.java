@@ -17,9 +17,10 @@ import java.util.List;
 public class MarketOrderService extends OrderService {
     public MarketOrderService(OrderRepository orderRepository,
                                 UserRepository userRepository,
+                                UserService userService,
                                 CryptoDataService cryptoDataService,
                                 SpotPositionService spotPositionService)
-    { super(orderRepository, userRepository, cryptoDataService, spotPositionService); }
+    { super(orderRepository, userRepository, userService, cryptoDataService, spotPositionService); }
     @Transactional
     public Order buy(OrderRequestDto dto) {
         var data = prepareToBuy(dto);
@@ -54,7 +55,7 @@ public class MarketOrderService extends OrderService {
 
     public List<OrderResponseDto> getUserMarketOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByUserId(userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.MARKET))
@@ -63,7 +64,7 @@ public class MarketOrderService extends OrderService {
     }
     public List<OrderResponseDto> getUserBuyMarketOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.BUY, userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.MARKET))
@@ -72,7 +73,7 @@ public class MarketOrderService extends OrderService {
     }
     public List<OrderResponseDto> getUserSellMarketOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.SELL,userId)
                 .stream()
                 .filter(order -> order.getOrderType().equals(OrderType.MARKET))

@@ -22,11 +22,12 @@ import java.util.Optional;
 public class OrderService {
     protected final OrderRepository orderRepository;
     protected final UserRepository userRepository;
+    protected final UserService userService;
     protected final CryptoDataService cryptoDataService;
     protected final SpotPositionService spotPositionService;
 
     protected OrderFinalization prepareToBuy(OrderRequestDto dto){
-        var user = findUserByIdWithLock(dto.getUserId());
+        var user = userService.findUserByIdWithLock(dto.getUserId());
         validateQuantity(dto.getQuantity());
 
         var tokenPrice = dto.getLimit() == null ? cryptoDataService.getPrice(dto.getToken()) : dto.getLimit();
@@ -36,7 +37,7 @@ public class OrderService {
     }
 
     protected OrderFinalization prepareToSell(OrderRequestDto dto){
-        var user = findUserByIdWithLock(dto.getUserId());
+        var user = userService.findUserByIdWithLock(dto.getUserId());
         validateQuantity(dto.getQuantity());
 
         var tokenPrice = dto.getLimit() == null ? cryptoDataService.getPrice(dto.getToken()) : dto.getLimit();
@@ -46,7 +47,7 @@ public class OrderService {
     }
     public List<OrderResponseDto> getUserOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByUserId(userId)
                 .stream()
                 .map(this::getDto)
@@ -54,7 +55,7 @@ public class OrderService {
     }
     public List<OrderResponseDto> getUserBuyOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.BUY,userId)
                 .stream()
                 .map(this::getDto)
@@ -62,7 +63,7 @@ public class OrderService {
     }
     public List<OrderResponseDto> getUserSellOrders(Long userId)
     {
-        findUserById(userId);
+        userService.findUserById(userId);
         return orderRepository.findAllByOrderTypeAndUserId(TransactionType.SELL,userId)
                 .stream()
                 .map(this::getDto)
@@ -101,12 +102,6 @@ public class OrderService {
         if(user.getFunds().compareTo(price) < 0)
             throw new InsufficientFundsException(user.getFunds(), price);
         return price;
-    }
-    protected User findUserByIdWithLock(Long userId) {
-        return userRepository.findByIdWithLock(userId).orElseThrow(() -> new UserNotFoundException(userId));
-    }
-    protected User findUserById(Long userId) {
-        return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
     }
 
     protected record OrderFinalization(User user, BigDecimal orderValue, BigDecimal tokenPrice) {}
