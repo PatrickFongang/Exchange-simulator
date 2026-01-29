@@ -6,22 +6,22 @@ The application integrates with **Binance** via WebSocket to fetch real-time cry
 
 ## 🚀 Key Features
 
-* **User Management & Security:**
+**User Management & Security:**
 * Secure user registration and authentication.
 * Role-based access control.
 
 
-* **Real-Time Market Data:**
+**Real-Time Market Data:**
 * Fetches live cryptocurrency prices directly from the **Binance API** using WebSockets (`CryptoWebSocketService`).
 
 
-* **Trading Engine:**
+**Trading Engine:**
 * **Market Orders:** Buy or sell assets immediately at the current market price.
 * **Limit Orders:** Place orders to buy or sell at a specific price. These are added to the order book and executed when the market price matches the limit.
 * **Order Book Management:** View active Buy and Sell order books for specific tokens.
 
 
-* **Portfolio Management:**
+**Portfolio Management:**
 * Track current spot positions, average buy price, and current position value.
 * View detailed order history (Open, Closed, Cancelled).
 
