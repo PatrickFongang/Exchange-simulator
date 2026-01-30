@@ -6,6 +6,7 @@ import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.entity.Order;
 import com.exchange_simulator.enums.OrderType;
 import com.exchange_simulator.enums.TransactionType;
+import com.exchange_simulator.exceptionHandler.exceptions.exchange.OrderNotFoundException;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.SpotPositionNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
@@ -15,6 +16,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -31,7 +33,9 @@ public class LimitOrderService extends OrderService {
     private final OrderService orderService;
     CryptoWebSocketService cryptoWebSocketService;
 
-    record QueuePair(PriorityBlockingQueue<Order> buy, PriorityBlockingQueue<Order> sell) {}
+    record PendingOrder(Long id, BigDecimal limitPrice){}
+    record QueuePair(PriorityBlockingQueue<PendingOrder> buy, PriorityBlockingQueue<PendingOrder> sell) {}
+
     Map<String, QueuePair> orderQueues = new ConcurrentHashMap<>();
     Set<Long> cancelledOrders = ConcurrentHashMap.newKeySet();
     Map<String, Consumer<Runnable>> listenerCleaners = new ConcurrentHashMap<>();
@@ -57,7 +61,9 @@ public class LimitOrderService extends OrderService {
     public Stream<Order> getBuyActiveOrdersQueue(String symbol){
         if(orderQueues.containsKey(symbol)){
             return orderQueues.get(symbol).buy.stream()
-                    .filter(o -> !cancelledOrders.contains(o.getId()));
+                    .filter(oid -> !cancelledOrders.contains(oid.id))
+                    .map(oid -> orderRepository.findById(oid.id)
+                            .orElseThrow(() -> new OrderNotFoundException(oid.id)));
         }
         return Stream.empty();
     }
@@ -65,7 +71,9 @@ public class LimitOrderService extends OrderService {
     public Stream<Order> getSellActiveOrdersQueue(String symbol){
         if(orderQueues.containsKey(symbol)){
             return orderQueues.get(symbol).sell.stream()
-                    .filter(o -> !cancelledOrders.contains(o.getId()));
+                    .filter(oid -> !cancelledOrders.contains(oid.id))
+                    .map(oid -> orderRepository.findById(oid.id)
+                            .orElseThrow(() -> new OrderNotFoundException(oid.id)));
         }
         return Stream.empty();
     }
@@ -79,8 +87,8 @@ public class LimitOrderService extends OrderService {
 
     private void addToQueue(Order order){
         if(!orderQueues.containsKey(order.getToken())){
-            var queueBuy = new PriorityBlockingQueue<>(2, Comparator.comparing(Order::getTokenPrice).reversed());
-            var queueSell = new PriorityBlockingQueue<>(2, Comparator.comparing(Order::getTokenPrice));
+            var queueBuy = new PriorityBlockingQueue<>(2, Comparator.comparing(PendingOrder::limitPrice).reversed());
+            var queueSell = new PriorityBlockingQueue<>(2, Comparator.comparing(PendingOrder::limitPrice));
 
             orderQueues.put(order.getToken(), new QueuePair(queueBuy, queueSell));
         }
@@ -90,11 +98,12 @@ public class LimitOrderService extends OrderService {
                 this.cryptoWebSocketService.AddTokenListener(order.getToken(), this::handleWatcherEvent));
         }
 
+        var newPendingOrder = new PendingOrder(order.getId(), order.getTokenPrice());
         if(order.getTransactionType() == TransactionType.BUY){
-            orderQueues.get(order.getToken()).buy.add(order);
+            orderQueues.get(order.getToken()).buy.add(newPendingOrder);
         }
         else{
-            orderQueues.get(order.getToken()).sell.add(order);
+            orderQueues.get(order.getToken()).sell.add(newPendingOrder);
         }
     }
 
@@ -110,28 +119,28 @@ public class LimitOrderService extends OrderService {
         var buyQueue = orderQueues.get(event.getSymbol()).buy;
         var sellQueue = orderQueues.get(event.getSymbol()).sell;
 
-        while(!buyQueue.isEmpty() && buyQueue.peek().getTokenPrice().compareTo(price) >= 0){
+        while(!buyQueue.isEmpty() && buyQueue.peek().limitPrice.compareTo(price) >= 0){
             var order = buyQueue.poll();
 
-            if(!cancelledOrders.contains(order.getId())) {
-                System.out.println("Filling buy order " + order.getId());
+            if(!cancelledOrders.contains(order.id)) {
+                System.out.println("Filling buy order " + order.id);
                 this.finalizeBuyOrder(order);
-            }else cancelledOrders.remove(order.getId());
+            }else cancelledOrders.remove(order.id());
         }
 
-        while(!sellQueue.isEmpty() && sellQueue.peek().getTokenPrice().compareTo(price) <= 0){
+        while(!sellQueue.isEmpty() && sellQueue.peek().limitPrice.compareTo(price) <= 0){
             var order = sellQueue.poll();
 
-            if(!cancelledOrders.contains(order.getId())) {
-                System.out.println("Filling sell order " + order.getId());
+            if(!cancelledOrders.contains(order.id)) {
+                System.out.println("Filling sell order " + order.id);
                 this.finalizeSellOrder(order);
-            }else cancelledOrders.remove(order.getId());
+            }else cancelledOrders.remove(order.id);
         }
 
-        while(!buyQueue.isEmpty() && cancelledOrders.contains(buyQueue.peek().getId()))
+        while(!buyQueue.isEmpty() && cancelledOrders.contains(buyQueue.peek().id))
             buyQueue.poll();
 
-        while(!sellQueue.isEmpty() && cancelledOrders.contains(sellQueue.peek().getId()))
+        while(!sellQueue.isEmpty() && cancelledOrders.contains(sellQueue.peek().id))
             sellQueue.poll();
 
         if(buyQueue.isEmpty() && sellQueue.isEmpty() && listenerCleaners.containsKey(event.getSymbol())){
@@ -152,9 +161,11 @@ public class LimitOrderService extends OrderService {
         var newOrder = new Order(dto.getToken(), dto.getQuantity(), tokenPrice,
                 orderValue, user, TransactionType.BUY, OrderType.LIMIT, null);
 
+        orderRepository.saveAndFlush(newOrder);
+
         addToQueue(newOrder);
 
-        return orderRepository.save(newOrder);
+        return newOrder;
     }
 
     @Transactional
@@ -175,7 +186,10 @@ public class LimitOrderService extends OrderService {
     }
 
     @Transactional
-    void finalizeBuyOrder(Order order){
+    void finalizeBuyOrder(PendingOrder pendingOrder){
+        var order = orderRepository.findById(pendingOrder.id)
+                .orElseThrow(() -> new OrderNotFoundException(pendingOrder.id));
+
         order.setClosedAt(Instant.now());
         orderRepository.saveAndFlush(order);
 
@@ -183,7 +197,10 @@ public class LimitOrderService extends OrderService {
     }
 
     @Transactional
-    void finalizeSellOrder(Order order){
+    void finalizeSellOrder(PendingOrder pendingOrder){
+        var order = orderRepository.findById(pendingOrder.id)
+                .orElseThrow(() -> new OrderNotFoundException(pendingOrder.id));
+
         order.setClosedAt(Instant.now());
 
         /* Prevents fetching with no active session */
