@@ -17,15 +17,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public ResponseEntity<List<UserResponseDto>> getUsers(){
-        return ResponseEntity.ok(userService
-                .getUsers()
-                .stream()
-                .map(UserService::getDto)
-                .toList());
-    }
 
     @GetMapping("/me")
     public ResponseEntity<UserResponseDto> getMe(@AuthenticationPrincipal CustomUserDetails user){
@@ -33,14 +24,5 @@ public class UserController {
         return found
                 .map(value -> ResponseEntity.ok().body(UserService.getDto(value)))
                 .orElseThrow(() -> new UserNotFoundException(user.getId()));
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUser(@PathVariable("id") Long id){
-        var user = userService.getUserById(id);
-        return user
-                .map(value -> ResponseEntity.ok().body(UserService.getDto(value)))
-                .orElseThrow(() -> new UserNotFoundException(id));
     }
 }

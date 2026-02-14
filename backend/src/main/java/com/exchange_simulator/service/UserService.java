@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,5 +59,13 @@ public class UserService {
     }
     public User findUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+    }
+    public void updateFunds(User user, BigDecimal amount){
+        if(user.getFunds().add(amount).compareTo(BigDecimal.ZERO) < 0){
+            user.setFunds(BigDecimal.ZERO);
+        }else{
+            user.setFunds(user.getFunds().add(amount));
+        }
+        userRepository.save(user);
     }
 }

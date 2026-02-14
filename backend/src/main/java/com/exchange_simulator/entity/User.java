@@ -49,6 +49,11 @@ public class User extends Base{
     @Getter
     private Instant updatedAt;
 
+    @Getter
+    @Setter
+    @Column(nullable = false)
+    private boolean isActive;
+
     public User() {}
 
     public User(String username, String email, String password, String role) {
@@ -56,6 +61,7 @@ public class User extends Base{
         this.email = email;
         this.password = password;
         this.role = role;
+        this.isActive = true;
     }
 
     @Override
