@@ -8,7 +8,6 @@ import com.exchange_simulator.entity.User;
 import com.exchange_simulator.enums.TransactionType;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.BadQuantityException;
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.InsufficientFundsException;
-import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

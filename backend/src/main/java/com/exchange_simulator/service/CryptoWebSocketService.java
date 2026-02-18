@@ -1,6 +1,7 @@
 package com.exchange_simulator.service;
 
 import com.exchange_simulator.dto.binance.MarkPriceStreamEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+@Slf4j
 @Service
 public class CryptoWebSocketService {
     HttpClient client = HttpClient.newHttpClient();
@@ -28,7 +30,7 @@ public class CryptoWebSocketService {
     private ApplicationEventPublisher eventPublisher;
 
     public CryptoWebSocketService(){
-        System.out.println("Start WebSocket service!");
+        log.info("Start WebSocket service!");
     }
 
     private void CreateTokenWebSocket(String symbol){
@@ -41,9 +43,9 @@ public class CryptoWebSocketService {
     private void RemoveTokenWebSocket(String symbol){
         if(openedSockets.containsKey(symbol)){
             openedSockets.get(symbol).sendClose(WebSocket.NORMAL_CLOSURE, "Internal request")
-                    .thenAccept(_ -> System.out.println("Send close to socket " + symbol))
+                    .thenAccept(_ -> log.info("Send close to socket {}", symbol))
                     .exceptionally(ex -> {
-                        System.out.println("Error sending close: " + ex);
+                        log.error("Error sending close: {}", String.valueOf(ex));
                         return null;
                     });
         }
@@ -102,7 +104,7 @@ public class CryptoWebSocketService {
 
         @Override
         public void onOpen(WebSocket webSocket){
-            System.out.println("WebSocket successfully opened!");
+            log.info("WebSocket successfully opened!");
             openedSockets.put(symbol, webSocket);
             WebSocket.Listener.super.onOpen(webSocket);
         }
@@ -115,8 +117,8 @@ public class CryptoWebSocketService {
 
         @Override
         public void onError(WebSocket webSocket, Throwable error){
-            System.out.println("Error in WebSocket:");
-            System.out.println(error.getMessage());
+            log.error("Error in WebSocket:");
+            log.error(error.getMessage());
             error.printStackTrace(System.out);
             WebSocket.Listener.super.onError(webSocket, error);
         }
@@ -126,7 +128,7 @@ public class CryptoWebSocketService {
                                            int statusCode,
                                            String reason) {
             openedSockets.remove(symbol);
-            System.out.println("WebSocket for " + symbol + " closed (" + statusCode + ") because of " + reason);
+            log.info("WebSocket for {} closed ({}) because of {}", symbol, statusCode, reason);
             return WebSocket.Listener.super.onClose(webSocket, statusCode, reason);
         }
     }

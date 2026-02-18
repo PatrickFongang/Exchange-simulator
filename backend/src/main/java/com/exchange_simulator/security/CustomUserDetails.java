@@ -2,14 +2,12 @@ package com.exchange_simulator.security;
 
 import com.exchange_simulator.entity.User;
 import lombok.Getter;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 @Getter
 public class CustomUserDetails implements UserDetails {

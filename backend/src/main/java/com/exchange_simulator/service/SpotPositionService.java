@@ -9,7 +9,6 @@ import com.exchange_simulator.exceptionHandler.exceptions.exchange.NotEnoughReso
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.SpotPositionNotFoundException;
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
-import com.exchange_simulator.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

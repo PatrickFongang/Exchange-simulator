@@ -12,6 +12,7 @@ import com.exchange_simulator.exceptionHandler.exceptions.exchange.SpotPositionN
 import com.exchange_simulator.repository.OrderRepository;
 import com.exchange_simulator.repository.SpotPositionRepository;
 import com.exchange_simulator.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+@Slf4j
 @Service
 public class LimitOrderService extends OrderService {
     private final SpotPositionRepository spotPositionRepository;
@@ -113,7 +115,7 @@ public class LimitOrderService extends OrderService {
     @Async
     @Transactional
     public void handleWatcherEvent(MarkPriceStreamEvent event){
-        System.out.println(event.getSymbol() + " -> " + event.getIndexPrice());
+        log.info("{} -> {}", event.getSymbol(), event.getIndexPrice());
         if(!orderQueues.containsKey(event.getSymbol())) return;
 
         var price = event.getIndexPrice();
@@ -125,7 +127,7 @@ public class LimitOrderService extends OrderService {
             var order = buyQueue.poll();
 
             if(!cancelledOrders.contains(order.id)) {
-                System.out.println("Filling buy order " + order.id);
+                log.info("Filling buy order {}", order.id);
                 this.finalizeBuyOrder(order);
             }else cancelledOrders.remove(order.id());
         }
@@ -134,7 +136,7 @@ public class LimitOrderService extends OrderService {
             var order = sellQueue.poll();
 
             if(!cancelledOrders.contains(order.id)) {
-                System.out.println("Filling sell order " + order.id);
+                log.info("Filling sell order {}", order.id);
                 this.finalizeSellOrder(order);
             }else cancelledOrders.remove(order.id);
         }

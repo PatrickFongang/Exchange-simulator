@@ -1,7 +1,6 @@
 package com.exchange_simulator.service;
 
 import com.exchange_simulator.dto.user.UserRequestDto;
-import com.exchange_simulator.dto.user.UserResponseDto;
 import com.exchange_simulator.entity.User;
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserAlreadyExistsException;
 import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundException;

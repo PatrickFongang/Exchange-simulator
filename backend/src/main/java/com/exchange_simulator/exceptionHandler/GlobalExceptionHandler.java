@@ -7,6 +7,7 @@ import com.exchange_simulator.exceptionHandler.exceptions.database.UserNotFoundE
 import com.exchange_simulator.exceptionHandler.exceptions.exchange.*;
 import com.exchange_simulator.exceptionHandler.exceptions.visible.VisibleException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -111,8 +113,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleUnhandledError(Exception ex, HttpServletRequest request) {
-        System.out.println("Received unhandled error:");
-        System.out.println(ex.toString());
+        log.warn("Received unhandled error:");
+        log.warn(ex.toString());
         ex.printStackTrace(System.out);
 
         return new ResponseEntity<>(
