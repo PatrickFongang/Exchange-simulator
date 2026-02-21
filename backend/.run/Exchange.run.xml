@@ -6,6 +6,7 @@
       <env name="SPRING_DATASOURCE_HOST" value="localhost" />
       <env name="SPRING_DATASOURCE_PORT" value="3306" />
       <env name="SPRING_DATASOURCE_NAME" value="exchange_simulator" />
+      <env name="JWT_SECRET" value="BvBhfpW7yV8Qt3OlUb+m/EoMaHVwUHN41CdcHhB5XBA=" />
     </envs>
     <module name="exchange-simulator" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.exchange_simulator.ExchangeSimulatorApplication" />

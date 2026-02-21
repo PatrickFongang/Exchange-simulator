@@ -1,4 +1,4 @@
-package com.exchange_simulator.Mapper;
+package com.exchange_simulator.mapper;
 
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.entity.SpotPosition;

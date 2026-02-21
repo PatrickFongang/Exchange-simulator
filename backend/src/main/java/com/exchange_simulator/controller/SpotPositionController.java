@@ -1,6 +1,6 @@
 package com.exchange_simulator.controller;
 
-import com.exchange_simulator.Mapper.SpotPositionMapper;
+import com.exchange_simulator.mapper.SpotPositionMapper;
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.security.CustomUserDetails;
 import com.exchange_simulator.service.SpotPositionService;

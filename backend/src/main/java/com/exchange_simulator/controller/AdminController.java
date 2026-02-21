@@ -1,6 +1,6 @@
 package com.exchange_simulator.controller;
 
-import com.exchange_simulator.Mapper.UserMapper;
+import com.exchange_simulator.mapper.UserMapper;
 import com.exchange_simulator.dto.order.OrderResponseDto;
 import com.exchange_simulator.dto.position.SpotPositionResponseDto;
 import com.exchange_simulator.dto.user.UserResponseDto;
@@ -11,7 +11,6 @@ import com.exchange_simulator.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
